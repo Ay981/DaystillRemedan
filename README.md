@@ -104,8 +104,8 @@ Deploying to Render (recommended flow)
 	  python3 post_days_remaining.py
 
 	- Add environment variables (in Render UI -> Environment):
-	  - BOT_TOKEN (secret)
-	  - CHANNEL_ID (public `@DaystillRemedhan` or numeric id for private channel)
+	  - BOT_TOKEN (secret) — or name it `BOT` if you prefer; the GitHub Actions workflow accepts either name.
+	  - CHANNEL_ID (public `@DaystillRemedhan` or numeric id for private channel) — or name it `CHANNELID`.
 	  - TARGET_DATE (2026-02-16)
 
 3. Schedule:
@@ -123,9 +123,9 @@ docker build -t daystill:local .
 docker run --rm -e BOT_TOKEN=replace -e CHANNEL_ID=@DaystillRemedhan -e TARGET_DATE=2026-02-16 daystill:local --dry-run
 ```
 
-Notes & security
-- Keep `BOT_TOKEN` secret; set it in Render as an environment variable (secrets in the dashboard).
-- If your channel is private, use the numeric `chat_id` (starts with -100...).
+- Notes & security
+- Keep `BOT_TOKEN` secret; set it in Render as an environment variable (secrets in the dashboard). If you're using GitHub Actions, you can store the same secret(s) in the repository secrets (names supported by the workflow: `BOT` or `BOT_TOKEN`, and `CHANNELID` or `CHANNEL_ID`).
+ - If your channel is private, use the numeric `chat_id` (starts with -100...).
 
 Want me to next:
 - Create a `render.yaml` manifest you can import into Render (I can scaffold it here), or

@@ -15,6 +15,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check required secrets
+        run: |
+          # Fail fast with a helpful message if the required secrets are not set.
+          if [ -z "${{ secrets.BOT }}" ] && [ -z "${{ secrets.BOT_TOKEN }}" ]; then
+            echo "ERROR: repository secret BOT or BOT_TOKEN is not set. Please add one of these in Settings → Secrets & variables → Actions."
+            exit 1
+          fi
+          if [ -z "${{ secrets.CHANNELID }}" ] && [ -z "${{ secrets.CHANNEL_ID }}" ]; then
+            echo "ERROR: repository secret CHANNELID or CHANNEL_ID is not set. Please add one of these in Settings → Secrets & variables → Actions."
+            exit 1
+          fi
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -26,10 +38,20 @@ jobs:
           pip install --no-cache-dir -r requirements.txt
 
       - name: Run post_days_remaining.py
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
         run: |
-          # Print a small header so the logs are easy to read
+          # Resolve secret names: prefer `BOT`/`CHANNELID` if present, otherwise fall back to `BOT_TOKEN`/`CHANNEL_ID`.
+          BOT_TOKEN_SECR="${{ secrets.BOT }}"
+          if [ -z "$BOT_TOKEN_SECR" ]; then
+            BOT_TOKEN_SECR="${{ secrets.BOT_TOKEN }}"
+          fi
+
+          CHANNEL_ID_SECR="${{ secrets.CHANNELID }}"
+          if [ -z "$CHANNEL_ID_SECR" ]; then
+            CHANNEL_ID_SECR="${{ secrets.CHANNEL_ID }}"
+          fi
+
+          export BOT_TOKEN="$BOT_TOKEN_SECR"
+          export CHANNEL_ID="$CHANNEL_ID_SECR"
+
           echo "Posting days-remaining message (TARGET_DATE=${{ env.TARGET_DATE }})"
           python post_days_remaining.py
