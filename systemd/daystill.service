@@ -1,0 +1,14 @@
+[Unit]
+Description=Post days remaining to Telegram (DaystillRemedhan)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+# The service will read environment variables from $HOME/.config/daystill/daystill.env
+EnvironmentFile=%h/.config/daystill/daystill.env
+# ExecStart runs the script with the env vars TARGET_DATE, CHANNEL_ID, BOT_TOKEN
+ExecStart=/usr/bin/env bash -c 'exec /usr/bin/python3 /home/aymen/personal/DaystillRemedan/post_days_remaining.py --target "${TARGET_DATE}" --channel "${CHANNEL_ID}" --token "${BOT_TOKEN}"'
+
+[Install]
+WantedBy=default.target

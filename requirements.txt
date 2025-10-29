@@ -1,0 +1,2 @@
+requests>=2.28
+# No heavy dependencies. Use the requests package to call Telegram Bot API.
