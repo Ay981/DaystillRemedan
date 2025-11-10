@@ -41,35 +41,42 @@ def build_message(
     *,
     period_days: int = 30,
     bar_width: int = 20,
+    year_start: Optional[date] = None,
 ) -> str:
     if today is None:
         today = date.today()
     d = days_until(target, today)
 
-    # Before start: show only days remaining (no bar), per request.
-    if d > 1:
-        return f"{d} days remaining until Remedhan (on {target.isoformat()})."
-    elif d == 1:
-        return f"1 day remaining until Remedhan (on {target.isoformat()})."
+    # Before start: show days remaining AND percent of year remaining until Remedhan
+    if d >= 1:
+        # Year start: default Jan 1 of target year
+        if year_start is None:
+            year_start = date(target.year, 1, 1)
+        total_year_days = (target - year_start).days
+        if total_year_days <= 0:
+            total_year_days = 365
+        days_remaining_in_year = (target - today).days
+        percent_remaining = int((days_remaining_in_year * 100) // total_year_days)
+        bar = build_progress_bar(percent_remaining, width=bar_width)
+        if d == 1:
+            days_msg = "1 day remaining until Remedhan"
+        else:
+            days_msg = f"{d} days remaining until Remedhan"
+        return f"{days_msg} (on {target.isoformat()})\n{bar} {percent_remaining}% of year remaining until Remedhan"
+
     elif d == 0:
         return f"Remedhan starts today ({target.isoformat()})."
 
     # After start: show inline filled progress bar with percent PASSED (not remaining).
-    # Define the Ramadan period length. Default 30 days; configurable.
-    # Elapsed days since start (0 on the start day). We already handled start-day above, so here elapsed >= 1.
     elapsed = (today - target).days
-    # Clamp elapsed to [0, period_days]
     if elapsed < 0:
         elapsed = 0
     if period_days <= 0:
         period_days = 30
     if elapsed > period_days:
         elapsed = period_days
-
-    # Percent passed is floor(elapsed/period * 100) so we don't show 100% before completion.
     percent = int((elapsed * 100) // period_days)
     bar = build_progress_bar(percent, width=bar_width)
-
     if elapsed >= period_days:
         return f"{bar} Remedhan completed (on { (target + timedelta(days=period_days)).isoformat() })."
     else:
@@ -96,6 +103,7 @@ def parse_args(argv) -> argparse.Namespace:
     p.add_argument("--dry-run", action="store_true", help="Do everything except actually call Telegram API")
     p.add_argument("--period-days", type=int, default=None, help="Length of Remedhan period in days (default 30 or PERIOD_DAYS env)")
     p.add_argument("--bar-width", type=int, default=None, help="Progress bar width (default 20 or BAR_WIDTH env)")
+    p.add_argument("--year-start", help="Year start date for percent remaining bar (default Jan 1 of target year)")
     p.add_argument("--today", help=argparse.SUPPRESS)
     return p.parse_args(argv)
 
@@ -109,6 +117,13 @@ def main(argv) -> int:
     # Configurable period length and bar width for the progress display after start
     period_days = args.period_days or int(os.getenv("PERIOD_DAYS", "30") or 30)
     bar_width = args.bar_width or int(os.getenv("BAR_WIDTH", "20") or 20)
+    year_start = None
+    if args.year_start:
+        try:
+            year_start = datetime.strptime(args.year_start, "%Y-%m-%d").date()
+        except ValueError:
+            print("Error: --year-start must be in YYYY-MM-DD format.", file=sys.stderr)
+            return 2
 
     if not token:
         print("Error: bot token is required (pass --token or set BOT_TOKEN).", file=sys.stderr)
@@ -136,7 +151,7 @@ def main(argv) -> int:
             print("Error: --today must be in YYYY-MM-DD format.", file=sys.stderr)
             return 2
 
-    message = build_message(target_date, today, period_days=period_days, bar_width=bar_width)
+    message = build_message(target_date, today, period_days=period_days, bar_width=bar_width, year_start=year_start)
 
     print("Prepared message:")
     print(message)
