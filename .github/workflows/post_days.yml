@@ -9,8 +9,13 @@ on:
 jobs:
   post-days-remaining:
     runs-on: ubuntu-latest
+    # Expose TARGET_DATE and resolve secrets into common env vars used by the script.
+    # Prefer repository secrets named `BOT` and `CHANNELID`, otherwise fall back to
+    # `BOT_TOKEN` and `CHANNEL_ID` (common alternate names).
     env:
       TARGET_DATE: '2026-02-16' # change if needed; non-sensitive
+      BOT_TOKEN: ${{ secrets.BOT || secrets.BOT_TOKEN }}
+      CHANNEL_ID: ${{ secrets.CHANNELID || secrets.CHANNEL_ID }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -39,19 +44,5 @@ jobs:
 
       - name: Run post_days_remaining.py
         run: |
-          # Resolve secret names: prefer `BOT`/`CHANNELID` if present, otherwise fall back to `BOT_TOKEN`/`CHANNEL_ID`.
-          BOT_TOKEN_SECR="${{ secrets.BOT }}"
-          if [ -z "$BOT_TOKEN_SECR" ]; then
-            BOT_TOKEN_SECR="${{ secrets.BOT_TOKEN }}"
-          fi
-
-          CHANNEL_ID_SECR="${{ secrets.CHANNELID }}"
-          if [ -z "$CHANNEL_ID_SECR" ]; then
-            CHANNEL_ID_SECR="${{ secrets.CHANNEL_ID }}"
-          fi
-
-          export BOT_TOKEN="$BOT_TOKEN_SECR"
-          export CHANNEL_ID="$CHANNEL_ID_SECR"
-
           echo "Posting days-remaining message (TARGET_DATE=${{ env.TARGET_DATE }})"
           python post_days_remaining.py

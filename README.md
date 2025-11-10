@@ -2,6 +2,8 @@ Days-until-Remedhan Telegram Poster
 
 What this does
 - A small Python script that computes the days remaining until a target date (Remedhan) and posts a short message to a Telegram channel using a bot.
+	- Before the start date: it posts "N days remaining until Remedhan (on YYYY-MM-DD)."
+	- After the start date: it posts an inline filled progress bar with the percent passed, e.g. "[█████░░░░░░░░░░░░] 18% passed".
 
 Files created
 - `post_days_remaining.py` — main script. Reads config from env vars or CLI.
@@ -12,6 +14,8 @@ You can configure via environment variables or CLI flags:
 - BOT_TOKEN (or --token): your bot token (e.g. 8373361785:...)
 - CHANNEL_ID (or --channel): channel id or username (e.g. @DaystillRemedhan)
 - TARGET_DATE (or --target): target date in YYYY-MM-DD format
+- PERIOD_DAYS (or --period-days): total length of the Remedhan period in days for the progress calculation (default 30)
+- BAR_WIDTH (or --bar-width): width of the progress bar (default 20)
 
 Examples
 Dry-run (safe test, does not send):
@@ -21,6 +25,22 @@ BOT_TOKEN=8373361785:REPLACE CHANNEL_ID=@DaystillRemedhan TARGET_DATE=2026-02-16
 ```
 
 Send message once:
+Progress bar behavior examples
+
+```bash
+# Before start date → days remaining (no progress bar)
+BOT_TOKEN=... CHANNEL_ID=@DaystillRemedhan TARGET_DATE=2026-02-16 python3 post_days_remaining.py --dry-run --today 2026-02-10
+
+# On start date → "starts today" (no progress bar)
+BOT_TOKEN=... CHANNEL_ID=@DaystillRemedhan TARGET_DATE=2026-02-16 python3 post_days_remaining.py --dry-run --today 2026-02-16
+
+# After start date → inline bar with percent passed (defaults: period 30, width 20)
+BOT_TOKEN=... CHANNEL_ID=@DaystillRemedhan TARGET_DATE=2026-02-16 python3 post_days_remaining.py --dry-run --today 2026-02-20
+
+# Customize the period length (e.g., 29 days) and bar width (e.g., 30)
+BOT_TOKEN=... CHANNEL_ID=@DaystillRemedhan TARGET_DATE=2026-02-16 PERIOD_DAYS=29 BAR_WIDTH=30 python3 post_days_remaining.py --dry-run --today 2026-02-25
+```
+
 
 ```bash
 BOT_TOKEN=8373361785:REPLACE CHANNEL_ID=@DaystillRemedhan TARGET_DATE=2026-02-16 python3 post_days_remaining.py
@@ -77,6 +97,7 @@ Notes:
 		TARGET_DATE=2026-02-16
 
 - The timer uses `OnUnitActiveSec=72h` for a strict 72-hour interval. `Persistent=true` ensures missed runs are triggered after reboots.
+ - Optional progress settings can also be placed here, e.g. `PERIOD_DAYS=30` and `BAR_WIDTH=20`.
 
 Security note
 - Avoid committing your bot token to version control. Prefer storing `BOT_TOKEN` in a secure secrets store or as a user-only environment variable.
