@@ -26,12 +26,14 @@ def days_until(target: date, today: Optional[date] = None) -> int:
     return (target - today).days
 
 
-def build_progress_bar(percent: int, width: int = 20, fill_char: str = "█", empty_char: str = "░") -> str:
-    """Return a simple inline progress bar like [████░░░░] based on percent (0-100)."""
+def build_progress_bar(percent: int, width: int = 20, fill_char: str = "█", empty_char: str = " ") -> str:
+    """Return a zsh-style progress bar like [████      ] based on percent (0-100)."""
     pct = max(0, min(100, percent))
     filled = round(width * pct / 100)
     if filled > width:
         filled = width
+    # Use ░ for empty segments as requested
+    empty_char = "░"
     return f"[{fill_char * filled}{empty_char * (width - filled)}] {pct}%"
 
 
@@ -39,40 +41,32 @@ def build_message(
     target: date,
     today: Optional[date] = None,
     *,
-    period_days: int = 30,
     bar_width: int = 20,
-    year_start: Optional[date] = None,
+    year_days: int = 360,
 ) -> str:
     if today is None:
         today = date.today()
     d = days_until(target, today)
 
-    # Before start: show days remaining AND percent of year remaining until Remedhan
+    # Before start: show days remaining AND percent of days remaining till Remedhan
     if d >= 1:
-        # Year start: default Jan 1 of target year
-        if year_start is None:
-            year_start = date(target.year, 1, 1)
-        total_year_days = (target - year_start).days
-        if total_year_days <= 0:
-            total_year_days = 365
-        days_remaining_in_year = (target - today).days
-        percent_remaining = int((days_remaining_in_year * 100) // total_year_days)
-        bar = build_progress_bar(percent_remaining, width=bar_width)
+        percent = int((year_days - d) / year_days * 100)
+        bar = build_progress_bar(percent, width=bar_width)
         if d == 1:
             days_msg = "1 day remaining until Remedhan"
         else:
             days_msg = f"{d} days remaining until Remedhan"
-        return f"{days_msg} (on {target.isoformat()})\n{bar} {percent_remaining}% of year remaining until Remedhan"
+        return f"{days_msg} (on {target.isoformat()})\n{bar}"
 
     elif d == 0:
         return f"Remedhan starts today ({target.isoformat()})."
 
     # After start: show inline filled progress bar with percent PASSED (not remaining).
+    # Keep previous logic for after start
+    period_days = 30
     elapsed = (today - target).days
     if elapsed < 0:
         elapsed = 0
-    if period_days <= 0:
-        period_days = 30
     if elapsed > period_days:
         elapsed = period_days
     percent = int((elapsed * 100) // period_days)
@@ -101,9 +95,8 @@ def parse_args(argv) -> argparse.Namespace:
     p.add_argument("--channel", help="Telegram channel id or @username (or set CHANNEL_ID env var)")
     p.add_argument("--target", help="Target date (YYYY-MM-DD) (or set TARGET_DATE env var)")
     p.add_argument("--dry-run", action="store_true", help="Do everything except actually call Telegram API")
-    p.add_argument("--period-days", type=int, default=None, help="Length of Remedhan period in days (default 30 or PERIOD_DAYS env)")
     p.add_argument("--bar-width", type=int, default=None, help="Progress bar width (default 20 or BAR_WIDTH env)")
-    p.add_argument("--year-start", help="Year start date for percent remaining bar (default Jan 1 of target year)")
+    p.add_argument("--year-days", type=int, default=None, help="Total days in year for percent calculation (default 360)")
     p.add_argument("--today", help=argparse.SUPPRESS)
     return p.parse_args(argv)
 
@@ -114,16 +107,8 @@ def main(argv) -> int:
     token = args.token or os.getenv("BOT_TOKEN")
     channel = args.channel or os.getenv("CHANNEL_ID")
     target_str = args.target or os.getenv("TARGET_DATE")
-    # Configurable period length and bar width for the progress display after start
-    period_days = args.period_days or int(os.getenv("PERIOD_DAYS", "30") or 30)
     bar_width = args.bar_width or int(os.getenv("BAR_WIDTH", "20") or 20)
-    year_start = None
-    if args.year_start:
-        try:
-            year_start = datetime.strptime(args.year_start, "%Y-%m-%d").date()
-        except ValueError:
-            print("Error: --year-start must be in YYYY-MM-DD format.", file=sys.stderr)
-            return 2
+    year_days = args.year_days or int(os.getenv("YEAR_DAYS", "360") or 360)
 
     if not token:
         print("Error: bot token is required (pass --token or set BOT_TOKEN).", file=sys.stderr)
@@ -151,7 +136,7 @@ def main(argv) -> int:
             print("Error: --today must be in YYYY-MM-DD format.", file=sys.stderr)
             return 2
 
-    message = build_message(target_date, today, period_days=period_days, bar_width=bar_width, year_start=year_start)
+    message = build_message(target_date, today, bar_width=bar_width, year_days=year_days)
 
     print("Prepared message:")
     print(message)
