@@ -32,9 +32,9 @@ def build_progress_bar(percent: int, width: int = 20, fill_char: str = "█", em
     filled = round(width * pct / 100)
     if filled > width:
         filled = width
-    # Use ░ for empty segments as requested
+    # Use ░ for empty segments as requested, no square brackets
     empty_char = "░"
-    return f"[{fill_char * filled}{empty_char * (width - filled)}] {pct}%"
+    return f"{fill_char * filled}{empty_char * (width - filled)} {pct}%"
 
 
 def build_message(
@@ -53,10 +53,10 @@ def build_message(
         percent = int((year_days - d) / year_days * 100)
         bar = build_progress_bar(percent, width=bar_width)
         if d == 1:
-            days_msg = "1 day remaining until Remedhan"
+            days_msg = "1 day remaining"
         else:
-            days_msg = f"{d} days remaining until Remedhan"
-        return f"{days_msg} (on {target.isoformat()})\n{bar}"
+            days_msg = f"{d} days remaining"
+        return f"{days_msg}\n{bar}"
 
     elif d == 0:
         return f"Remedhan starts today ({target.isoformat()})."
