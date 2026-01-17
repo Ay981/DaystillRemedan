@@ -83,10 +83,18 @@ def send_telegram_message(token: str, channel: str, text: str, parse_mode: Optio
     if parse_mode:
         payload["parse_mode"] = parse_mode
     resp = requests.post(url, data=payload, timeout=15)
+    # Try to parse JSON response; if that fails, return status and text to aid debugging
     try:
-        return resp.json()
+        j = resp.json()
     except ValueError:
-        resp.raise_for_status()
+        j = {"ok": False, "http_status": resp.status_code, "http_text": resp.text}
+    else:
+        # include http status for more context
+        if isinstance(j, dict):
+            j.setdefault("http_status", resp.status_code)
+        else:
+            j = {"ok": False, "http_status": resp.status_code, "http_text": str(j)}
+    return j
 
 
 def parse_args(argv) -> argparse.Namespace:
