@@ -80,25 +80,25 @@ def build_message(
         bar = build_progress_bar(percent, width=bar_width)
         if d == 1:
             ar_days = "🕌 يوم واحد متبقٍ (شعبان ٢٩)"
-            en_days = "1 day remaining (Shaʻban 29)"
+            en_days = "**1 day remaining (Shaʻban 29)**"
         else:
             ar_days = f"🕌 {d} أيام متبقية"
-            en_days = f"{d} days remaining"
+            en_days = f"**{d} days remaining**"
         # Only on Shaʻban 25, 1447 AH (2026-02-13), add the hadith and dua
         if today == date(2026, 2, 13):
             hadith_section = (
-                f"\n📖 حديث اليوم:\n{special_hadith}"
-                f"\n🤲 دعاء اليوم:\n{special_dua}"
+                f"\n\n📖 حديث اليوم:\n{special_hadith}\n\n"
+                f"🤲 دعاء اليوم:\n{special_dua}\n"
             )
         else:
             hadith_section = ""
         return (
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"{ar_days}\n"
-            f"{en_days}\n"
-            f"{bar}\n"
+            f"{en_days}\n\n"
+            f"{bar}\n\n"
             f"📅 {hijri_str}\n"
-            f"{hadith_section}\n"
+            f"{hadith_section}"
             f"━━━━━━━━━━━━━━━━━━━━━━"
         )
 
