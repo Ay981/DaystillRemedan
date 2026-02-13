@@ -15,6 +15,7 @@ import sys
 import argparse
 from datetime import date, datetime, timedelta
 import requests
+import random
 from hijri_converter import Gregorian
 from typing import Optional
 
@@ -45,10 +46,27 @@ def build_message(
     bar_width: int = 20,
     year_days: int = 360,
 ) -> str:
+    # Well-known authentic Ramadan duas (Arabic)
+    ramadan_duas = [
+        "اللهم بلغنا رمضان وأعنا على صيامه وقيامه وتقبله منا يا أرحم الراحمين",
+        "اللهم إنك عفو تحب العفو فاعف عني",
+        "اللهم اجعلنا من عتقائك من النار في هذا الشهر الكريم",
+        "اللهم تقبل صيامنا وقيامنا وصالح أعمالنا",
+        "اللهم ارزقنا ليلة القدر واغفر لنا فيها",
+        "اللهم اختم لنا شهر رمضان برضوانك والعتق من نيرانك",
+        "اللهم اجعلنا من المقبولين في رمضان",
+        "اللهم اغفر لنا وارحمنا وتب علينا إنك أنت التواب الرحيم",
+        "اللهم اجعلنا من الذين يستمعون القول فيتبعون أحسنه",
+        "اللهم ارزقنا حسن الخاتمة في رمضان وفي كل وقت"
+    ]
     if today is None:
         today = date.today()
     # Fix off-by-one: include today in the count (so Shaʻban 25 to Ramadan 1 is 4 days, not 3)
     d = days_until(target, today) + 1
+
+    # Special: post a specific hadith and dua on Shaʻban 25, 1447 AH (2026-02-13)
+    special_hadith = "إِذَا دَخَلَ شَهْرُ رَمَضَانَ فُتِّحَتْ أَبْوَابُ السَّمَاءِ وَغُلِّقَتْ أَبْوَابُ جَهَنَّمَ وَسُلْسِلَتْ الشَّيَاطِين‏"
+    special_dua = "اللهم بلغنا رمضان وأعنا على صيامه وقيامه وتقبله منا يا أرحم الراحمين"
 
     # Add Hijri date for today
     hijri = Gregorian(today.year, today.month, today.day).to_hijri()
@@ -66,12 +84,21 @@ def build_message(
         else:
             ar_days = f"🕌 {d} أيام متبقية"
             en_days = f"{d} days remaining"
+        # Only on Shaʻban 25, 1447 AH (2026-02-13), add the hadith and dua
+        if today == date(2026, 2, 13):
+            hadith_section = (
+                f"\n📖 حديث اليوم:\n{special_hadith}"
+                f"\n🤲 دعاء اليوم:\n{special_dua}"
+            )
+        else:
+            hadith_section = ""
         return (
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"{ar_days}\n"
             f"{en_days}\n"
             f"{bar}\n"
             f"📅 {hijri_str}\n"
+            f"{hadith_section}\n"
             f"━━━━━━━━━━━━━━━━━━━━━━"
         )
 
@@ -106,10 +133,28 @@ def build_message(
             days_left_msg = "يوم واحد متبقٍ من رمضان\n1 day remaining of Remedhan"
         else:
             days_left_msg = f"{days_left} أيام متبقية من رمضان\n{days_left} days remaining of Remedhan"
+        # Add a random hadith and dua if today is in Ramadan
+        in_ramadan = (today >= target) and (today <= target + timedelta(days=period_days-1))
+        hadith_section = ""
+        if in_ramadan:
+            # Only post the hadith if it hasn't been posted yet this Ramadan
+            unposted = [h for h in ramadan_hadiths if h not in posted]
+            if unposted:
+                hadith = unposted[0]
+                hadith_section = (
+                    f"\n📖 حديث عن رمضان:\n{hadith}"
+                    f"\n🤲 دعاء اليوم:\n{random.choice(ramadan_duas)}"
+                )
+                # Mark as posted
+                with open(hadith_file, "a", encoding="utf-8") as f:
+                    f.write(hadith + "\n")
+            else:
+                hadith_section = ""
         return (
             f"{bar} passed\n"
             f"{days_left_msg}\n"
             f"📅 {hijri_str}\n"
+            f"{hadith_section}\n"
             f"━━━━━━━━━━━━━━━━━━━━━━"
         )
 
@@ -180,6 +225,39 @@ def main(argv) -> int:
         except ValueError:
             print("Error: --today must be in YYYY-MM-DD format.", file=sys.stderr)
             return 2
+
+
+
+    # Post daily until Ramadan starts, then every 3 days during and after Ramadan until next Shaʻban 20
+    ramadan_start = target_date
+    ramadan_days = 29
+    ramadan_end = ramadan_start + timedelta(days=ramadan_days-1)
+    # Next Shaʻban 20 (approx, for next year)
+    next_shaban_20 = None
+    if today >= ramadan_start:
+        # Find next Shaʻban 20 (Hijri 20 Shaʻban of next year)
+        try:
+            from hijri_converter import Hijri
+            hijri_today = Gregorian(today.year, today.month, today.day).to_hijri()
+            next_year = hijri_today.year + 1 if hijri_today.month > 8 or (hijri_today.month == 8 and hijri_today.day > 20) else hijri_today.year
+            next_shaban_20_greg = Hijri(next_year, 8, 20).to_gregorian()
+            next_shaban_20 = date(next_shaban_20_greg.year, next_shaban_20_greg.month, next_shaban_20_greg.day)
+        except Exception:
+            pass
+
+    if today < ramadan_start:
+        # Post daily before Ramadan
+        pass
+    elif today >= ramadan_start and (next_shaban_20 is None or today < next_shaban_20):
+        # Post every 3 days during and after Ramadan until next Shaʻban 20
+        days_since_ramadan = (today - ramadan_start).days
+        if days_since_ramadan % 3 != 0:
+            print("Not a posting day (every 3 days during/after Ramadan until next Shaʻban 20). Exiting.")
+            return 0
+    else:
+        # After next Shaʻban 20, stop posting
+        print("After next Shaʻban 20, not posting.")
+        return 0
 
     message = build_message(target_date, today, bar_width=bar_width, year_days=year_days)
 
