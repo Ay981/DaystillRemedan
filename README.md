@@ -12,16 +12,16 @@ Files created
 Configuration
 You can configure via environment variables or CLI flags:
 - BOT_TOKEN (or --token): your bot token (e.g. 8373361785:...)
-- CHANNEL_ID (or --channel): channel id or username (e.g. @DaystillRemedhan)
+- CHANNEL_ID (or --channel): channel id or username (e.g. @DaystillRamadan)
 - TARGET_DATE (or --target): target date in YYYY-MM-DD format
-- PERIOD_DAYS (or --period-days): total length of the Remedhan period in days for the progress calculation (default 30)
+- PERIOD_DAYS (or --period-days): total length of the Ramadan period in days for the progress calculation (default 30)
 - BAR_WIDTH (or --bar-width): width of the progress bar (default 20)
 
 Examples
 Dry-run (safe test, does not send):
 
 ```bash
-BOT_TOKEN=8373361785:REPLACE CHANNEL_ID=@DaystillRemedhan TARGET_DATE=2026-02-16 python3 post_days_remaining.py --dry-run
+BOT_TOKEN=8373361785:REPLACE CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 python3 post_days_remaining.py --dry-run
 ```
 
 Send message once:
@@ -29,21 +29,21 @@ Progress bar behavior examples
 
 ```bash
 # Before start date → days remaining (no progress bar)
-BOT_TOKEN=... CHANNEL_ID=@DaystillRemedhan TARGET_DATE=2026-02-16 python3 post_days_remaining.py --dry-run --today 2026-02-10
+BOT_TOKEN=... CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 python3 post_days_remaining.py --dry-run --today 2026-02-10
 
 # On start date → "starts today" (no progress bar)
-BOT_TOKEN=... CHANNEL_ID=@DaystillRemedhan TARGET_DATE=2026-02-16 python3 post_days_remaining.py --dry-run --today 2026-02-16
+BOT_TOKEN=... CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 python3 post_days_remaining.py --dry-run --today 2026-02-16
 
 # After start date → inline bar with percent passed (defaults: period 30, width 20)
-BOT_TOKEN=... CHANNEL_ID=@DaystillRemedhan TARGET_DATE=2026-02-16 python3 post_days_remaining.py --dry-run --today 2026-02-20
+BOT_TOKEN=... CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 python3 post_days_remaining.py --dry-run --today 2026-02-20
 
 # Customize the period length (e.g., 29 days) and bar width (e.g., 30)
-BOT_TOKEN=... CHANNEL_ID=@DaystillRemedhan TARGET_DATE=2026-02-16 PERIOD_DAYS=29 BAR_WIDTH=30 python3 post_days_remaining.py --dry-run --today 2026-02-25
+BOT_TOKEN=... CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 PERIOD_DAYS=29 BAR_WIDTH=30 python3 post_days_remaining.py --dry-run --today 2026-02-25
 ```
 
 
 ```bash
-BOT_TOKEN=8373361785:REPLACE CHANNEL_ID=@DaystillRemedhan TARGET_DATE=2026-02-16 python3 post_days_remaining.py
+BOT_TOKEN=8373361785:REPLACE CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 python3 post_days_remaining.py
 ```
 
 Scheduling every 3 days
@@ -51,7 +51,7 @@ Option A — cron (simple, day-of-month based)
 - Edit your crontab with `crontab -e` and add a line like below to run at 09:00 every 3 days of the month:
 
 ```cron
-0 9 */3 * * BOT_TOKEN=your_token_here CHANNEL_ID=@DaystillRemedhan TARGET_DATE=2026-02-16 /usr/bin/python3 /home/aymen/personal/DaystillRemedan/post_days_remaining.py
+0 9 */3 * * BOT_TOKEN=your_token_here CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 /usr/bin/python3 /home/aymen/personal/DaystillRemedan/post_days_remaining.py
 ```
 
 Note: `*/3` in the day-of-month field repeats every 3 days within each calendar month and will not be perfectly every-72-hours across month boundaries. If you need exact 72-hour intervals, use Option B.
@@ -92,7 +92,7 @@ journalctl --user -u daystill.service --since "1 hour ago"
 Notes:
 - The env file created is at `$HOME/.config/daystill/daystill.env`. Put these three lines (no quotes):
 
-		CHANNEL_ID=@DaystillRemedhan
+		CHANNEL_ID=@DaystillRamadan
 		TARGET_DATE=2026-02-16
 
 - The timer uses `OnUnitActiveSec=72h` for a strict 72-hour interval. `Persistent=true` ensures missed runs are triggered after reboots.
@@ -140,7 +140,7 @@ Local Docker test (before pushing)
 
 ```bash
 docker build -t daystill:local .
-docker run --rm -e BOT_TOKEN=replace -e CHANNEL_ID=@DaystillRemedhan -e TARGET_DATE=2026-02-16 daystill:local --dry-run
+docker run --rm -e BOT_TOKEN=replace -e CHANNEL_ID=@DaystillRamadan -e TARGET_DATE=2026-02-16 daystill:local --dry-run
 ```
 
 - Notes & security
