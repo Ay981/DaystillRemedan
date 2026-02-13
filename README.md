@@ -92,7 +92,6 @@ journalctl --user -u daystill.service --since "1 hour ago"
 Notes:
 - The env file created is at `$HOME/.config/daystill/daystill.env`. Put these three lines (no quotes):
 
-		BOT_TOKEN=8373361785:AAGOoArxjh3hn4gkVZEZ9LHZ8xvmmqDMvLs
 		CHANNEL_ID=@DaystillRemedhan
 		TARGET_DATE=2026-02-16
 
