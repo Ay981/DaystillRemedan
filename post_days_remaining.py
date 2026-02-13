@@ -198,9 +198,11 @@ def build_message(
             # Rotate hadiths by day of Ramadan
             day_of_ramadan = (today - target).days
             hadith = ramadan_hadiths[day_of_ramadan % len(ramadan_hadiths)]
+            taraweeh_reminder = "🕌 لا تنسَ صلاة التراويح أو قيام الليل اليوم!\nDon't forget Taraweeh or Qiyam prayers tonight!"
             hadith_section = (
                 f"\n📖 حديث عن رمضان:\n{hadith}"
                 f"\n🤲 دعاء اليوم:\n{random.choice(ramadan_duas)}"
+                f"\n{taraweeh_reminder}"
             )
         return (
             f"{bar} passed\n"
