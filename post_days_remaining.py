@@ -47,7 +47,8 @@ def build_message(
 ) -> str:
     if today is None:
         today = date.today()
-    d = days_until(target, today)
+    # Fix off-by-one: include today in the count (so Shaʻban 25 to Ramadan 1 is 4 days, not 3)
+    d = days_until(target, today) + 1
 
     # Add Hijri date for today
     hijri = Gregorian(today.year, today.month, today.day).to_hijri()
@@ -60,13 +61,26 @@ def build_message(
         percent = int((year_days - d) / year_days * 100)
         bar = build_progress_bar(percent, width=bar_width)
         if d == 1:
-            days_msg = "1 day remaining (Shaʻban 29)"
+            ar_days = "🕌 يوم واحد متبقٍ (شعبان ٢٩)"
+            en_days = "1 day remaining (Shaʻban 29)"
         else:
-            days_msg = f"{d} days remaining"
-        return f"{days_msg}\n{bar}\n📅 {hijri_str}"
+            ar_days = f"🕌 {d} أيام متبقية"
+            en_days = f"{d} days remaining"
+        return (
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"{ar_days}\n"
+            f"{en_days}\n"
+            f"{bar}\n"
+            f"📅 {hijri_str}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━"
+        )
 
     elif d == 0:
-        return f"Remedhan starts today ({target.isoformat()})!\n📅 {hijri_str}"
+        return (
+            f"🌙 رمضان يبدأ اليوم!\nRemedhan starts today!\n"
+            f"📅 {hijri_str}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━"
+        )
 
     # After start: show inline filled progress bar with percent PASSED (not remaining).
     # Keep previous logic for after start
@@ -79,15 +93,25 @@ def build_message(
     percent = int((elapsed * 100) // period_days)
     bar = build_progress_bar(percent, width=bar_width)
     if elapsed >= period_days:
-        return f"{bar} Remedhan completed (on { (target + timedelta(days=period_days)).isoformat() }).\n📅 {hijri_str}"
+        return (
+            f"✅ رمضان اكتمل!\nRemedhan completed!\n"
+            f"{bar}\n"
+            f"📅 {hijri_str}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━"
+        )
     else:
         # Show how many days remain until the end of Ramadan
         days_left = period_days - elapsed
         if days_left == 1:
-            days_left_msg = "1 day remaining of Remedhan"
+            days_left_msg = "يوم واحد متبقٍ من رمضان\n1 day remaining of Remedhan"
         else:
-            days_left_msg = f"{days_left} days remaining of Remedhan"
-        return f"{bar} passed\n{days_left_msg}\n📅 {hijri_str}"
+            days_left_msg = f"{days_left} أيام متبقية من رمضان\n{days_left} days remaining of Remedhan"
+        return (
+            f"{bar} passed\n"
+            f"{days_left_msg}\n"
+            f"📅 {hijri_str}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━"
+        )
 
 
 def send_telegram_message(token: str, channel: str, text: str, parse_mode: Optional[str] = None) -> dict:
