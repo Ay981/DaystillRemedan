@@ -140,7 +140,7 @@ def build_message(
         if in_ramadan:
             # Calculate days left in Ramadan
             day_of_ramadan = (today - ramadan_start).days
-            days_left = period_days - day_of_ramadan
+            days_left = period_days - day_of_ramadan + 1
             ar_days = f"🕌 {days_left +1 } أيام متبقية من رمضان"
             en_days = f"**{days_left + 1} days remaining of Remedhan**"
             hadith = ramadan_hadiths[day_of_ramadan % len(ramadan_hadiths)]
