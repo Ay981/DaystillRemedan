@@ -116,7 +116,7 @@ def build_message(
     ]
     if today is None:
         today = date.today()
-    # Fix off-by-one: include today in the count (so Shaʻban 25 to Ramadan 1 is 4 days, not 3)
+    # Include today in pre-Ramadan countdown (Shaʻban 25 to Ramadan 1 is 4 days)
     d = days_until(target, today) + 1
 
     # Special: post a specific hadith and dua on Shaʻban 25, 1447 AH (2026-02-13)
@@ -127,38 +127,33 @@ def build_message(
     hijri = Gregorian(today.year, today.month, today.day).to_hijri()
     hijri_str = f"{hijri.day} {hijri.month_name('ar')} {hijri.year} هـ"
 
-    # Assume Shaʻban ends at 29, so Ramadan starts the next day
-    # If target is Ramadan 1, then Shaʻban 29 is target - 1
-    # This logic is for pre-Ramadan countdown
-    if d >= 1:
-        percent = int((year_days - d) / year_days * 100)
+    period_days = 29
+    ramadan_start = target
+    ramadan_end = ramadan_start + timedelta(days=period_days - 1)
+
+    # During Ramadan: countdown of days remaining AFTER today.
+    # Day 1 -> 28 remaining, Day 2 -> 27 remaining (for a 29-day Ramadan).
+    if ramadan_start <= today <= ramadan_end:
+        day_of_ramadan = (today - ramadan_start).days
+        days_left = max(0, period_days - (day_of_ramadan + 1))
+        percent = int(((day_of_ramadan + 1) * 100) // period_days)
         bar = build_progress_bar(percent, width=bar_width)
-        period_days = 29
-        # If today is Ramadan, show days remaining of Remedhan
-        ramadan_start = target
-        in_ramadan = (today >= ramadan_start) and (today <= ramadan_start + timedelta(days=period_days-1))
-        if in_ramadan:
-            # Calculate days left in Ramadan
-            day_of_ramadan = (today - ramadan_start).days
-            days_left = period_days - day_of_ramadan + 1
-            ar_days = f"🕌 {days_left +1 } أيام متبقية من رمضان"
-            en_days = f"**{days_left + 1} days remaining of Remedhan**"
-            hadith = ramadan_hadiths[day_of_ramadan % len(ramadan_hadiths)]
-            taraweeh_reminder = "🕌 لا تنسَ صلاة التراويح أو قيام الليل اليوم!\nDon't forget Taraweeh or Qiyam prayers tonight!"
-            hadith_section = (
-                f"\n📖 حديث عن رمضان:\n{hadith}"
-                f"\n🤲 دعاء اليوم:\n{random.choice(ramadan_duas)}"
-                f"\n{taraweeh_reminder}"
-            )
+
+        if days_left == 1:
+            ar_days = "🕌 يوم واحد متبقٍ من رمضان"
+            en_days = "**1 day remaining of Remedhan**"
         else:
-            # Before Ramadan
-            if d == 1:
-                ar_days = "🕌 يوم واحد متبقٍ (شعبان ٢٩)"
-                en_days = "**1 day remaining (Shaʻban 29)**"
-            else:
-                ar_days = f"🕌 {d} أيام متبقية"
-                en_days = f"**{d} days remaining**"
-            hadith_section = ""
+            ar_days = f"🕌 {days_left} أيام متبقية من رمضان"
+            en_days = f"**{days_left} days remaining of Remedhan**"
+
+        hadith = ramadan_hadiths[day_of_ramadan % len(ramadan_hadiths)]
+        taraweeh_reminder = "🕌 لا تنسَ صلاة التراويح أو قيام الليل اليوم!\nDon't forget Taraweeh or Qiyam prayers tonight!"
+        hadith_section = (
+            f"\n📖 حديث عن رمضان:\n{hadith}"
+            f"\n🤲 دعاء اليوم:\n{random.choice(ramadan_duas)}"
+            f"\n{taraweeh_reminder}"
+        )
+
         return (
             f"━━━━━━━━━━━━━━━━━━━━━━\n"
             f"{ar_days}\n"
@@ -169,33 +164,28 @@ def build_message(
             f"━━━━━━━━━━━━━━━━━━━━━━"
         )
 
-    elif d == 0:
-        # Ramadan day 1: show days remaining in Ramadan
-        period_days = 29  # or 28 if needed
-        days_left = period_days
-        bar = build_progress_bar(0, width=bar_width)
-        days_left_msg = f"{days_left} أيام متبقية من رمضان\n{days_left} days remaining of Remedhan"
-        hadith_section = ""
-        # Add hadith and dua for day 1
-        day_of_ramadan = 0
-        hadith = ramadan_hadiths[day_of_ramadan % len(ramadan_hadiths)]
-        taraweeh_reminder = "🕌 لا تنسَ صلاة التراويح أو قيام الليل اليوم!\nDon't forget Taraweeh or Qiyam prayers tonight!"
-        hadith_section = (
-            f"\n📖 حديث عن رمضان:\n{hadith}"
-            f"\n🤲 دعاء اليوم:\n{random.choice(ramadan_duas)}"
-            f"\n{taraweeh_reminder}"
-        )
+    # Before Ramadan
+    if today < ramadan_start:
+        percent = int((year_days - d) / year_days * 100)
+        bar = build_progress_bar(percent, width=bar_width)
+        if d == 1:
+            ar_days = "🕌 يوم واحد متبقٍ (شعبان ٢٩)"
+            en_days = "**1 day remaining (Shaʻban 29)**"
+        else:
+            ar_days = f"🕌 {d} أيام متبقية"
+            en_days = f"**{d} days remaining**"
+
         return (
-            f"{bar} passed\n"
-            f"{days_left_msg}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"{ar_days}\n"
+            f"{en_days}\n\n"
+            f"{bar}\n\n"
             f"📅 {hijri_str}\n"
-            f"{hadith_section}\n"
             f"━━━━━━━━━━━━━━━━━━━━━━"
         )
 
     # After start: show inline filled progress bar with percent PASSED (not remaining).
     # Keep previous logic for after start
-    period_days = 29  # Ramadan is 29 days if Shaʻban ends at 29
     elapsed = (today - target).days
     if elapsed < 0:
         elapsed = 0
