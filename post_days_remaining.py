@@ -141,8 +141,8 @@ def build_message(
             # Calculate days left in Ramadan
             day_of_ramadan = (today - ramadan_start).days
             days_left = period_days - day_of_ramadan
-            ar_days = f"🕌 {days_left} أيام متبقية من رمضان"
-            en_days = f"**{days_left} days remaining of Remedhan**"
+            ar_days = f"🕌 {days_left +1 } أيام متبقية من رمضان"
+            en_days = f"**{days_left + 1} days remaining of Remedhan**"
             hadith = ramadan_hadiths[day_of_ramadan % len(ramadan_hadiths)]
             taraweeh_reminder = "🕌 لا تنسَ صلاة التراويح أو قيام الليل اليوم!\nDon't forget Taraweeh or Qiyam prayers tonight!"
             hadith_section = (
