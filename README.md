@@ -46,25 +46,25 @@ BOT_TOKEN=... CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 PERIOD_DAYS=29 
 BOT_TOKEN=8373361785:REPLACE CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 python3 post_days_remaining.py
 ```
 
-Scheduling every 3 days
-Option A — cron (simple, day-of-month based)
-- Edit your crontab with `crontab -e` and add a line like below to run at 09:00 every 3 days of the month:
+Scheduling daily
+Option A — cron (simple)
+- Edit your crontab with `crontab -e` and add a line like below to run at 09:00 every day:
 
 ```cron
-0 9 */3 * * BOT_TOKEN=your_token_here CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 /usr/bin/python3 /home/aymen/personal/DaystillRemedan/post_days_remaining.py
+0 9 * * * BOT_TOKEN=your_token_here CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 /usr/bin/python3 /home/aymen/personal/DaystillRemedan/post_days_remaining.py
 ```
 
-Note: `*/3` in the day-of-month field repeats every 3 days within each calendar month and will not be perfectly every-72-hours across month boundaries. If you need exact 72-hour intervals, use Option B.
+Note: cron runs based on wall-clock schedule. If you want a post exactly 24 hours after the previous run, use Option B.
 
 Option B — systemd timer (better for exact intervals)
-- Create a service and timer that runs the script every 72 hours. Example files are not created here automatically; if you want I can scaffold them.
+- Create a service and timer that runs the script every 24 hours. Example files are not created here automatically; if you want I can scaffold them.
 
-Option B — systemd timer (accurate 72-hour interval)
+Option B — systemd timer (accurate 24-hour interval)
 - I have scaffolded a user unit + timer and an install helper in `systemd/`.
 
 Files added:
 - `systemd/daystill.service` — user unit that runs the script once when triggered. It reads env vars from `$HOME/.config/daystill/daystill.env`.
-- `systemd/daystill.timer` — timer set to `OnUnitActiveSec=72h` (runs every 72 hours).
+- `systemd/daystill.timer` — timer set to `OnUnitActiveSec=24h` (runs every 24 hours).
 - `systemd/install_systemd_user.sh` — helper script that copies the unit/timer into `$HOME/.config/systemd/user/` and creates an example env file.
 
 Quick install and enable (run locally):
@@ -95,18 +95,18 @@ Notes:
 		CHANNEL_ID=@DaystillRamadan
 		TARGET_DATE=2026-02-16
 
-- The timer uses `OnUnitActiveSec=72h` for a strict 72-hour interval. `Persistent=true` ensures missed runs are triggered after reboots.
+- The timer uses `OnUnitActiveSec=24h` for a strict 24-hour interval. `Persistent=true` ensures missed runs are triggered after reboots.
  - Optional progress settings can also be placed here, e.g. `PERIOD_DAYS=30` and `BAR_WIDTH=20`.
 
 Security note
 - Avoid committing your bot token to version control. Prefer storing `BOT_TOKEN` in a secure secrets store or as a user-only environment variable.
 
 Next steps
-- If you want, I can create a systemd unit and timer that runs the script on a strict 72-hour interval, or set up a small Docker container for easier deployment.
+- If you want, I can create a systemd unit and timer that runs the script on a strict 24-hour interval, or set up a small Docker container for easier deployment.
 
 Hosting on Render (step-by-step)
 
-If you want to host on Render, the simplest approach is to use a Render Scheduled Job that runs this container every few days.
+If you want to host on Render, the simplest approach is to use a Render Scheduled Job that runs this container daily.
 
 Repository changes for Render
 - `Dockerfile` — a small image that installs dependencies and runs the script (already added).
@@ -129,8 +129,8 @@ Deploying to Render (recommended flow)
 	  - TARGET_DATE (2026-02-16)
 
 3. Schedule:
-	- Use a cron expression such as `0 9 */3 * *` to run at 09:00 every 3rd day of the month (same caveat as cron across month boundaries).
-	- If Render UI supports interval scheduling, set the interval to 72 hours for a strict every-72-hours run.
+	- Use a cron expression such as `0 9 * * *` to run at 09:00 every day.
+	- If Render UI supports interval scheduling, set the interval to 24 hours for a strict every-24-hours run.
 
 4. Test the job:
 	- Trigger the job manually from Render once to confirm it runs and posts.

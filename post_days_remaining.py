@@ -299,7 +299,7 @@ def main(argv) -> int:
 
 
 
-    # Post daily before and during Ramadan, then every 3 days after Ramadan until next Shaʻban 20
+    # Post daily before, during, and after Ramadan until next Shaʻban 20
     ramadan_start = target_date
     ramadan_days = 29
     ramadan_end = ramadan_start + timedelta(days=ramadan_days-1)
@@ -323,11 +323,8 @@ def main(argv) -> int:
         # Post daily during Ramadan
         pass
     elif today > ramadan_end and (next_shaban_20 is None or today < next_shaban_20):
-        # Post every 3 days after Ramadan until next Shaʻban 20
-        days_since_ramadan = (today - ramadan_end).days
-        if days_since_ramadan % 3 != 0:
-            print("Not a posting day (every 3 days after Ramadan until next Shaʻban 20). Exiting.")
-            return 0
+        # Post daily after Ramadan until next Shaʻban 20
+        pass
     else:
         # After next Shaʻban 20, stop posting
         print("After next Shaʻban 20, not posting.")

@@ -2,8 +2,8 @@ name: Post Days Remaining
 
 on:
   schedule:
-    # Runs at 09:00 UTC every 3rd day of month (calendar-based; not exact 72-hour intervals across months)
-    - cron: '0 9 */3 * *'
+    # Runs at 09:00 UTC daily
+    - cron: '0 9 * * *'
   workflow_dispatch:
 
 jobs:

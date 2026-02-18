@@ -1,10 +1,10 @@
 [Unit]
-Description=Run DaystillRemedhan poster every 72 hours
+Description=Run DaystillRemedhan poster daily
 
 [Timer]
-# Start 5 minutes after boot and then every 72 hours (3 days)
+# Start 5 minutes after boot and then every 24 hours (daily)
 OnBootSec=5min
-OnUnitActiveSec=72h
+OnUnitActiveSec=24h
 # Persist across reboots so missed runs are triggered when system is back up
 Persistent=true
 
