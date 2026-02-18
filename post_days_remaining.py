@@ -133,8 +133,9 @@ def build_message(
 
     # During Ramadan: countdown of days remaining AFTER today.
     # Day 1 -> 28 remaining, Day 2 -> 27 remaining (for a 29-day Ramadan).
-    if ramadan_start <= today <= ramadan_end:
-        day_of_ramadan = (today - ramadan_start).days
+    # Prefer Hijri date to identify Ramadan day (avoids target-date drift).
+    if hijri.month == 9 and 1 <= hijri.day <= period_days:
+        day_of_ramadan = hijri.day - 1
         days_left = max(0, period_days - (day_of_ramadan + 1))
         percent = int(((day_of_ramadan + 1) * 100) // period_days)
         bar = build_progress_bar(percent, width=bar_width)
