@@ -1,8 +1,8 @@
 Days-until-Remedhan Telegram Poster
 
 What this does
-- A small Python script that computes the days remaining until a target date (Remedhan) and posts a short message to a Telegram channel using a bot.
-	- Before the start date: it posts "N days remaining until Remedhan (on YYYY-MM-DD)."
+- A small Python script that computes the months remaining until a target date (Remedhan) and posts a short message to a Telegram channel using a bot.
+	- Before the start date: it posts "N months remaining."
 	- After the start date: it posts an inline filled progress bar with the percent passed, e.g. "[█████░░░░░░░░░░░░] 18% passed".
 
 Files created
@@ -46,25 +46,25 @@ BOT_TOKEN=... CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 PERIOD_DAYS=29 
 BOT_TOKEN=8373361785:REPLACE CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 python3 post_days_remaining.py
 ```
 
-Scheduling daily
+Scheduling monthly
 Option A — cron (simple)
-- Edit your crontab with `crontab -e` and add a line like below to run at 09:00 every day:
+- Edit your crontab with `crontab -e` and add a line like below to run at 09:00 on day 1 of every month:
 
 ```cron
-0 9 * * * BOT_TOKEN=your_token_here CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 /usr/bin/python3 /home/aymen/personal/DaystillRemedan/post_days_remaining.py
+0 9 1 * * BOT_TOKEN=your_token_here CHANNEL_ID=@DaystillRamadan TARGET_DATE=2026-02-16 /usr/bin/python3 /home/aymen/personal/DaystillRemedan/post_days_remaining.py
 ```
 
 Note: cron runs based on wall-clock schedule. If you want a post exactly 24 hours after the previous run, use Option B.
 
-Option B — systemd timer (better for exact intervals)
-- Create a service and timer that runs the script every 24 hours. Example files are not created here automatically; if you want I can scaffold them.
+Option B — systemd timer
+- Create a service and timer that runs the script once per month. Example files are not created here automatically; if you want I can scaffold them.
 
-Option B — systemd timer (accurate 24-hour interval)
+Option B — systemd timer (monthly)
 - I have scaffolded a user unit + timer and an install helper in `systemd/`.
 
 Files added:
 - `systemd/daystill.service` — user unit that runs the script once when triggered. It reads env vars from `$HOME/.config/daystill/daystill.env`.
-- `systemd/daystill.timer` — timer set to `OnUnitActiveSec=24h` (runs every 24 hours).
+- `systemd/daystill.timer` — timer set to `OnCalendar=monthly` (runs once per month).
 - `systemd/install_systemd_user.sh` — helper script that copies the unit/timer into `$HOME/.config/systemd/user/` and creates an example env file.
 
 Quick install and enable (run locally):
@@ -95,7 +95,7 @@ Notes:
 		CHANNEL_ID=@DaystillRamadan
 		TARGET_DATE=2026-02-16
 
-- The timer uses `OnUnitActiveSec=24h` for a strict 24-hour interval. `Persistent=true` ensures missed runs are triggered after reboots.
+- The timer uses `OnCalendar=monthly` for monthly runs. `Persistent=true` ensures missed runs are triggered after reboots.
  - Optional progress settings can also be placed here, e.g. `PERIOD_DAYS=30` and `BAR_WIDTH=20`.
 
 Security note

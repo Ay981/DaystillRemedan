@@ -14,6 +14,7 @@ import os
 import sys
 import argparse
 from datetime import date, datetime, timedelta
+from math import ceil
 import requests
 import random
 from hijri_converter import Gregorian
@@ -26,6 +27,15 @@ def days_until(target: date, today: Optional[date] = None) -> int:
     if today is None:
         today = date.today()
     return (target - today).days
+
+
+def months_until(target: date, today: Optional[date] = None) -> int:
+    if today is None:
+        today = date.today()
+    remaining_days = (target - today).days
+    if remaining_days <= 0:
+        return 0
+    return ceil(remaining_days / 30)
 
 
 def build_progress_bar(percent: int, width: int = 20, fill_char: str = "█", empty_char: str = " ") -> str:
@@ -169,12 +179,13 @@ def build_message(
     if today < ramadan_start:
         percent = int((year_days - d) / year_days * 100)
         bar = build_progress_bar(percent, width=bar_width)
-        if d == 1:
-            ar_days = "🕌 يوم واحد متبقٍ (شعبان ٢٩)"
-            en_days = "**1 day remaining (Shaʻban 29)**"
+        m = months_until(target, today)
+        if m == 1:
+            ar_days = "🗓️ شهر واحد متبقٍ"
+            en_days = "**1 month remaining**"
         else:
-            ar_days = f"🕌 {d} أيام متبقية"
-            en_days = f"**{d} days remaining**"
+            ar_days = f"🗓️ {m} أشهر متبقية"
+            en_days = f"**{m} months remaining**"
 
         return (
             f"━━━━━━━━━━━━━━━━━━━━━━\n"

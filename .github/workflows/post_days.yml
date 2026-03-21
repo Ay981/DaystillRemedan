@@ -1,13 +1,13 @@
-name: Post Days Remaining
+name: Post Months Remaining
 
 on:
   schedule:
-    # Runs at 09:00 UTC daily
-    - cron: '0 9 * * *'
+    # Runs at 09:00 UTC on day 1 of every month
+    - cron: '0 9 1 * *'
   workflow_dispatch:
 
 jobs:
-  post-days-remaining:
+  post-months-remaining:
     runs-on: ubuntu-latest
     # Expose TARGET_DATE and resolve secrets into common env vars used by the script.
     # Prefer repository secrets named `BOT` and `CHANNELID`, otherwise fall back to
@@ -44,5 +44,5 @@ jobs:
 
       - name: Run post_days_remaining.py
         run: |
-          echo "Posting days-remaining message (TARGET_DATE=${{ env.TARGET_DATE }})"
+          echo "Posting months-remaining message (TARGET_DATE=${{ env.TARGET_DATE }})"
           python post_days_remaining.py
