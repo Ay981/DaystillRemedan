@@ -17,7 +17,7 @@ from datetime import date, datetime, timedelta
 from math import ceil
 import requests
 import random
-from hijri_converter import Gregorian
+from hijri_converter import Gregorian, Hijri
 from typing import Optional
 
 TELEGRAM_SEND_MESSAGE = "https://api.telegram.org/bot{token}/sendMessage"
@@ -206,9 +206,26 @@ def build_message(
     percent = int((elapsed * 100) // period_days)
     bar = build_progress_bar(percent, width=bar_width)
     if elapsed >= period_days:
+        next_ramadan_hijri_year = hijri.year + 1 if hijri.month >= 9 else hijri.year
+        next_ramadan_greg = Hijri(next_ramadan_hijri_year, 9, 1).to_gregorian()
+        next_ramadan_start = date(next_ramadan_greg.year, next_ramadan_greg.month, next_ramadan_greg.day)
+        months_left = months_until(next_ramadan_start, today)
+        days_left = days_until(next_ramadan_start, today) + 1
+        percent = int((year_days - days_left) / year_days * 100)
+        bar = build_progress_bar(percent, width=bar_width)
+
+        if months_left == 1:
+            ar_msg = "🗓️ شهر واحد متبقٍ حتى رمضان القادم"
+            en_msg = "**1 month remaining until next Remedhan**"
+        else:
+            ar_msg = f"🗓️ {months_left} أشهر متبقية حتى رمضان القادم"
+            en_msg = f"**{months_left} months remaining until next Remedhan**"
+
         return (
-            f"✅ رمضان اكتمل!\nRemedhan completed!\n"
-            f"{bar}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"{ar_msg}\n"
+            f"{en_msg}\n\n"
+            f"{bar}\n\n"
             f"📅 {hijri_str}\n"
             f"━━━━━━━━━━━━━━━━━━━━━━"
         )
